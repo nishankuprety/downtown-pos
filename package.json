@@ -1,0 +1,38 @@
+{
+  "name": "restaurant-pos-app",
+  "version": "1.0.0",
+  "description": "Restaurant POS Desktop App",
+  "main": "electron.js",
+  "type": "module",
+  "scripts": {
+    "start-backend": "node server.js",
+    "dev-backend": "node --watch server.js",
+    "build-frontend": "npm run build --prefix frontend",
+    "start": "electron .",
+    "dist": "npm run build-frontend && electron-builder"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "electron": "^40.4.0",
+    "electron-builder": "^26.7.0"
+  },
+  
+  "build": {
+    "appId": "com.restaurant.pos",
+    "productName": "Downtown Billing System",
+    "icon":"icon.ico",
+    "files": [
+      "**/*"
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": true
+    }
+  }
+}
+

@@ -1,0 +1,16 @@
+<<<<<<< HEAD
+{}
+=======
+{
+  "Counter Seat 1": [
+    {
+      "id": 1,
+      "name": "Royal Stag",
+      "category": "Whiskey",
+      "price": 110,
+      "available": 1,
+      "quantity": 1
+    }
+  ]
+}
+>>>>>>> a82617223317880911539cd617ae1b5b9a3e64a4
