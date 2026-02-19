@@ -291,7 +291,7 @@ app.delete("/api/orders/:id", (req, res) => {
 });
 
 // CLEAR ALL ORDER HISTORY (with password)
-app.delete("/api/orders", (req, res) => {
+app.delete("/api/orders/clear", (req, res) => {
   try {
     const password = req.query.password || req.body.password;
 
