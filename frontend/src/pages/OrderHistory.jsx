@@ -497,7 +497,7 @@ function OrderHistory() {
             <div>
               <div className="text-sm text-gray-600">Total Revenue</div>
               <div className="text-2xl font-bold text-green-600">
-                ₹{getTotalRevenue().toFixed(2)}
+                ₹{Math.floor(getTotalRevenue())}
               </div>
             </div>
 
@@ -506,7 +506,7 @@ function OrderHistory() {
               <div className="text-2xl font-bold text-purple-600">
                 ₹
                 {orders.length > 0
-                  ? (getTotalRevenue() / orders.length).toFixed(2)
+                  ? Math.floor(getTotalRevenue() / orders.length)
                   : "0.00"}
               </div>
             </div>
@@ -550,7 +550,7 @@ function OrderHistory() {
 
                 <div className="text-right">
                   <div className="text-2xl font-bold text-green-600">
-                    ₹{order.total.toFixed(2)}
+                    ₹{Math.floor(order.total)}
                   </div>
                   <button className="text-blue-600 hover:text-blue-700 text-sm mt-2">
                     View Details →
