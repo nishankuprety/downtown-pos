@@ -213,7 +213,7 @@ function MenuManagement() {
                   >
                     <div className="flex-1">
                       <div className="font-semibold">{item.name}</div>
-                      <div className="text-blue-600 font-bold">₹{item.price.toFixed(2)}</div>
+                      <div className="text-blue-600 font-bold">₹{Math.floor(item.price)}</div>  
                     </div>
                     <div className="flex items-center space-x-2">
                       <span className={`px-2 py-1 rounded text-sm ${
