@@ -144,6 +144,7 @@ function POSPage() {
         subtotal,
         tax,
         discount: discountAmount,
+        discount_percent: discount, 
         total
       };
 
@@ -197,21 +198,37 @@ function POSPage() {
   }, {});
 
 if (showReceipt && receiptData) {
-  const rawTotal = receiptData.subtotal + receiptData.tax - receiptData.discount;
+  // ignore decimals everywhere
+  const subtotalInt = Math.floor(receiptData.subtotal);
+  const taxInt = Math.floor(receiptData.tax);
+  const discountInt = Math.floor(receiptData.discount);
 
-  const finalTotal = Math.round(rawTotal);
+  const rawTotal = subtotalInt + taxInt - discountInt;
+  const finalTotal = Math.floor(rawTotal);
 
-  // convert to number so we can compare properly
-  const roundOff = +(finalTotal - rawTotal).toFixed(2);
+  // format date + time without seconds
+  const formattedDateTime = new Date(receiptData.created_at).toLocaleString([], {
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
 
   return (
     <div className="min-h-screen bg-gray-100 p-2">
       <style>{`
         @media print {
+
+          @page {
+            size: 80mm auto;
+            margin: 2mm;
+          }
+
           body {
             margin: 0;
             padding: 0;
-            zoom: 1.25;
           }
 
           .no-print {
@@ -220,20 +237,29 @@ if (showReceipt && receiptData) {
 
           .receipt-box {
             box-shadow: none !important;
-            margin: 0 !important;
-            padding: 10px !important;
-            width: 80mm !important;
+            margin: 0 auto !important;
+            padding: 6px !important;
+            width: 72mm !important;
             font-size: 13px !important;
             font-weight: 700 !important;
-            line-height: 1.35 !important;
+            line-height: 1.3 !important;
           }
 
           table {
             width: 100% !important;
+            table-layout: fixed !important;
             border-collapse: collapse !important;
           }
 
           th, td {
+            padding: 1px 0 !important;
+            font-size: 13px !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+          }
+
+          td:last-child, th:last-child {
             padding-right: 4px !important;
           }
         }
@@ -242,22 +268,23 @@ if (showReceipt && receiptData) {
       <div
         className="mx-auto bg-white receipt-box print-content"
         style={{
-          width: "80mm",
+          width: "72mm",
           fontFamily: "Courier New, monospace",
           fontSize: "13px",
-          lineHeight: "1.35",
-          padding: "10px",
+          lineHeight: "1.3",
+          padding: "6px",
           fontWeight: "700",
-          paddingRight: "12px", // ✅ IMPORTANT: prevents cutting off .00
         }}
       >
         {/* HEADER */}
         <div className="text-center">
-          <div className="font-bold text-lg">DOWNTOWN RESTRO & BAR</div>
+          <div style={{ fontSize: "19px", fontWeight: "1000" }}>
+            DOWNTOWN RESTRO & BAR
+          </div>
           <div>East Majhitar 737136</div>
           <div>Near V Guard, SMIT Road</div>
           <div>Phone: 9635460927</div>
-          <div className="font-bold">GSTIN: 112500000202TMP</div>
+          <div style={{ fontWeight: "900" }}>GSTIN: 112500000202TMP</div>
         </div>
 
         <hr className="border-t border-dashed border-black my-1" />
@@ -266,15 +293,17 @@ if (showReceipt && receiptData) {
         <div style={{ fontSize: "12px" }}>
           <div className="flex justify-between">
             <span>Order No:</span>
-            <span className="font-bold">{receiptData.order_number}</span>
+            <span style={{ fontWeight: "900" }}>{receiptData.order_number}</span>
           </div>
+
           <div className="flex justify-between">
             <span>Table:</span>
-            <span className="font-bold">{receiptData.table_name}</span>
+            <span style={{ fontWeight: "900" }}>{receiptData.table_name}</span>
           </div>
+
           <div className="flex justify-between">
             <span>Date:</span>
-            <span>{new Date(receiptData.created_at).toLocaleString()}</span>
+            <span>{formattedDateTime}</span>
           </div>
         </div>
 
@@ -284,23 +313,21 @@ if (showReceipt && receiptData) {
         <table style={{ width: "100%", fontSize: "12px" }}>
           <thead>
             <tr style={{ borderBottom: "1px dashed black" }}>
-              <th style={{ textAlign: "left", width: "45%" }}>Item</th>
+              <th style={{ textAlign: "left", width: "50%" }}>Item</th>
               <th style={{ textAlign: "center", width: "10%" }}>Qty</th>
               <th style={{ textAlign: "right", width: "20%" }}>Rate</th>
-              <th style={{ textAlign: "right", width: "25%", paddingRight: "6px" }}>
-                Amt
-              </th>
+              <th style={{ textAlign: "right", width: "20%" }}>Amt</th>
             </tr>
           </thead>
 
           <tbody>
             {receiptData.items.map((item, index) => (
               <tr key={index}>
-                <td style={{ paddingTop: "3px" }}>{item.name}</td>
+                <td style={{ paddingTop: "2px" }}>{item.name}</td>
                 <td style={{ textAlign: "center" }}>{item.quantity}</td>
-                <td style={{ textAlign: "right" }}>{item.price.toFixed(2)}</td>
-                <td style={{ textAlign: "right", paddingRight: "6px" }}>
-                  {(item.price * item.quantity).toFixed(2)}
+                <td style={{ textAlign: "right" }}>{Math.floor(item.price)}</td>
+                <td style={{ textAlign: "right" }}>
+                  {Math.floor(item.price * item.quantity)}
                 </td>
               </tr>
             ))}
@@ -313,49 +340,39 @@ if (showReceipt && receiptData) {
         <div style={{ fontSize: "12px" }}>
           <div className="flex justify-between">
             <span>Subtotal:</span>
-            <span>{receiptData.subtotal.toFixed(2)}</span>
+            <span>{subtotalInt}</span>
           </div>
 
           <div className="flex justify-between">
             <span>GST ({taxRate}%):</span>
-            <span>{receiptData.tax.toFixed(2)}</span>
+            <span>{taxInt}</span>
           </div>
 
           {receiptData.discount > 0 && (
             <div className="flex justify-between">
-              <span>Discount:</span>
-              <span>-{receiptData.discount.toFixed(2)}</span>
-            </div>
-          )}
-
-          <div className="flex justify-between">
-            <span>Total:</span>
-            <span>{rawTotal.toFixed(2)}</span>
-          </div>
-
-          {/* SHOW ROUND OFF ONLY IF NOT ZERO */}
-          {roundOff !== 0 && (
-            <div className="flex justify-between">
-              <span>Rounded Off:</span>
-              <span>
-                {roundOff > 0 ? "+" : ""}
-                {roundOff.toFixed(2)}
-              </span>
+              <span>Discount ({receiptData.discount_percent}%):</span>
+              <span>-{discountInt}</span>
             </div>
           )}
 
           <hr className="border-t border-black my-1" />
 
-          <div className="flex justify-between font-bold text-lg">
+          <div
+            className="flex justify-between"
+            style={{ fontWeight: "900", fontSize: "16px" }}
+          >
             <span>NET PAYABLE</span>
-            <span>₹{finalTotal.toFixed(2)}</span>
+            <span>₹{finalTotal}</span>
           </div>
         </div>
 
         <hr className="border-t border-dashed border-black my-1" />
 
         {/* FOOTER */}
-        <div className="text-center" style={{ fontSize: "11px" }}>
+        <div
+          className="text-center"
+          style={{ fontSize: "11px", fontWeight: "900" }}
+        >
           <div>THANK YOU, VISIT AGAIN!</div>
         </div>
 
@@ -378,6 +395,7 @@ if (showReceipt && receiptData) {
     </div>
   );
 }
+
 
   return (
     <div className="container mx-auto p-4">
@@ -439,7 +457,7 @@ if (showReceipt && receiptData) {
                           className="p-3 text-left border rounded-lg hover:bg-blue-50 hover:border-blue-400 transition-all"
                         >
                           <div className="font-semibold">{item.name}</div>
-                          <div className="text-blue-600 font-bold">₹{item.price.toFixed(2)}</div>
+                          <div className="text-blue-600 font-bold">₹{Math.floor(item.price)}</div>
                         </button>
                       ))}
                     </div>
@@ -523,7 +541,7 @@ if (showReceipt && receiptData) {
                             +
                           </button>
                         </div>
-                        <span className="font-bold">₹{(item.price * item.quantity).toFixed(2)}</span>
+                        <span className="font-bold">₹{Math.floor(item.price * item.quantity)}</span>
                       </div>
                     </div>
                   ))}
@@ -532,7 +550,7 @@ if (showReceipt && receiptData) {
                 <div className="border-t pt-4 space-y-2">
                   <div className="flex justify-between">
                     <span>Subtotal:</span>
-                    <span className="font-bold">₹{subtotal.toFixed(2)}</span>
+                    <span className="font-bold">₹{Math.floor(subtotal)}</span>
                   </div>
                   
                   <div className="flex justify-between items-center">
@@ -547,7 +565,7 @@ if (showReceipt && receiptData) {
                         step="0.5"
                       />
                       <span>%</span>
-                      <span className="font-bold">₹{tax.toFixed(2)}</span>
+                      <span className="font-bold">₹{Math.floor(tax)}</span>
                     </div>
                   </div>
 
@@ -564,13 +582,13 @@ if (showReceipt && receiptData) {
                         step="1"
                       />
                       <span>%</span>
-                      <span className="font-bold text-green-600">-₹{discountAmount.toFixed(2)}</span>
+                      <span className="font-bold text-green-600">-₹{Math.floor(discountAmount)}</span>
                     </div>
                   </div>
 
                   <div className="flex justify-between text-xl font-bold border-t pt-2">
                     <span>TOTAL:</span>
-                    <span className="text-blue-600">₹{total.toFixed(2)}</span>
+                    <span className="text-blue-600">₹{Math.floor(total)}</span>
                   </div>
 
                   <button
