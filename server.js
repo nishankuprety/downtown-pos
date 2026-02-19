@@ -267,6 +267,46 @@ app.get("/api/orders/next-number", (req, res) => {
   }
 });
 
+// DELETE ORDER (with password)
+app.delete("/api/orders/:id", (req, res) => {
+  try {
+    const password = req.query.password || req.body.password;
+
+    if (password !== "9332497108") {
+      return res.status(401).json({ error: "Invalid password" });
+    }
+
+    const orders = readJSON(ORDERS_FILE);
+
+    const filteredOrders = orders.filter(
+      (o) => o.id !== parseInt(req.params.id)
+    );
+
+    writeJSON(ORDERS_FILE, filteredOrders);
+
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// CLEAR ALL ORDER HISTORY (with password)
+app.delete("/api/orders", (req, res) => {
+  try {
+    const password = req.query.password || req.body.password;
+
+    if (password !== "9332497108") {
+      return res.status(401).json({ error: "Invalid password" });
+    }
+
+    writeJSON(ORDERS_FILE, []); // remove all orders
+
+    res.json({ success: true, message: "All order history cleared!" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // ------------------ SERVE FRONTEND BUILD ------------------
 app.use(express.static(path.join(__dirname, "frontend", "dist")));
 
